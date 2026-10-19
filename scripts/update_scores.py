@@ -268,6 +268,8 @@ def collect(site, ledger, args, http):
         log(f"fallback: {len(got)} finals from team pages")
     return [f for f in finals if f["date"] in dset]
 
+WESTPORT_WOBURN_OPP = set(['1f6b93c5-739d-4612-a4bf-bee21631ba07', '290334c6-adb3-45f9-8b20-c20d519deb20', '2aefc75d-c102-4185-961f-7a71321a4d82', '59f88996-4098-48a1-84b5-eee8e5e833b9', '5a03515f-34b3-474d-b9b3-a1de7d447ad2', '696b9404-637a-43cd-b68d-b2ae2cf1a447', '767533f2-79fa-4312-92ab-d5693b2136fd', '8569b22d-03e4-43d8-ade3-554d4ab50fba', '94e70474-400f-4334-ba22-62c983d11bcc', 'b029aa72-b54e-4527-a570-6ef99f71a5cc', 'b1936730-5ade-4aec-ae7d-b37d8410f1b2', 'b6c0b114-4bff-4e88-a6ef-05a5986fa35c', 'cfe0c89b-5431-4596-9321-95ac40024afc'])
+
 def merge(site, ledger, finals):
     """Add new / corrected finals to the ledger. Returns counts."""
     L = ledger["finals"]; c = {"new": 0, "corrected": 0, "dup": 0, "unlisted": 0, "ignored": 0}
@@ -277,6 +279,10 @@ def merge(site, ledger, finals):
         if not lh and not la:
             continue
         if f["date"] < site.season_start:
+            c["ignored"] += 1; continue
+        # Massachusetts (audit 2026-10-19): MaxPreps files Woburn Memorial's 2026-27 schedule under Westport; finals between Westport and these
+        # Woburn opponents (Middlesex League etc.) are Woburn's games, not Westport's, so they are ignored (build: scripts/games.py drops them too).
+        if "2a637a1e-f985-4789-9d3e-b44b7df9695d" in (f["homeMp"], f["awayMp"]) and ({f["homeMp"], f["awayMp"]} & WESTPORT_WOBURN_OPP):
             c["ignored"] += 1; continue
         # Massachusetts: MIAA schools (site divisions 1-5: D1..D5) may not play games before the MIAA first contest date (Thu 2026-12-10);
         # anything earlier involving an MIAA team is a scrimmage or a bad date and never counts (same rule as the schedule build).
